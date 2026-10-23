@@ -389,7 +389,7 @@ pip install -e ".[colmap]" --extra-index-url https://download.pytorch.org/whl/cu
 
 ```bash
 python inference_colmap.py --scene /data/scene --prompt "A quiet street." \
-  --model_path checkpoints/SCoPE --output_path outputs/street.mp4
+  --model_path models/SCoPE --output_path outputs/street.mp4
 ```
 
 场景目录包含 `images/` 和 `sparse/0/`，支持 COLMAP 二进制或文本模型。有多个重建模型时，通过 `--colmap-model PATH` 指定；图像目录不同则使用 `--images-dir PATH`。所有相对路径均相对于当前工作目录。
@@ -408,7 +408,7 @@ python inference_colmap.py --scene /data/scene --prompt "A quiet street." \
 ```bash
 python inference_colmap.py --scene /data/scene \
   --reference-index 10 --start 20 --end 120 \
-  --prompt "A quiet street." --model_path checkpoints/SCoPE \
+  --prompt "A quiet street." --model_path models/SCoPE \
   --output_path outputs/street.mp4
 ```
 

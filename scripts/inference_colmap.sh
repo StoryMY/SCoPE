@@ -13,7 +13,7 @@ CUDA_VISIBLE_DEVICES=0 python inference_colmap.py \
   --width 480 \
   --height 832 \
   --prompt "A quiet street filmed with a handheld camera." \
-  --model_path "checkpoints/SCoPE" \
+  --model_path "models/SCoPE" \
   --prepared-dir "outputs/input" \
   --output_path "outputs/video.mp4" \
   --seed 42

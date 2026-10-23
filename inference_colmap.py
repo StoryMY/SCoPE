@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--prepared-dir", type=Path, default=Path("outputs/colmap_input"))
     parser.add_argument("--prompt")
-    parser.add_argument("--model_path", default="TencentARC/SCoPE")
+    parser.add_argument("--model_path", default="models/SCoPE")
     parser.add_argument("--output_path", type=Path, default=Path("outputs/colmap.mp4"))
     parser.add_argument("--cache_dir", type=Path)
     parser.add_argument("--vram_limit_gb", type=float)
