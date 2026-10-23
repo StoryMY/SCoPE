@@ -7,7 +7,7 @@ name = "scope-video"
 version = "0.1.0"
 description = "SCoPE camera control for Wan2.2 video diffusion transformers"
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.12,<3.13"
 authors = [
     {name = "Minghao Yin"},
     {name = "Jiahao Lu"},
@@ -16,10 +16,9 @@ authors = [
     {name = "Ying Shan"},
     {name = "Kai Han"},
 ]
-# Pins mirror the ucpe_v11 uv environment the released weights were trained and
-# evaluated in. torch / torchvision are locked to the exact versions and CUDA
-# build (cu128) used for the released checkpoints: switching the torch version
-# changes numerical outputs, so reproduce this environment exactly.
+# This fork targets Python 3.12 and PyTorch 2.8.0 / torchvision 0.23.0 (cu128).
+# Upstream evaluated the released weights with PyTorch 2.9.1; numerical outputs
+# may differ with this environment.
 dependencies = [
     "av>=17,<18",
     "einops>=0.8,<0.9",
@@ -36,8 +35,8 @@ dependencies = [
     "safetensors>=0.7,<0.8",
     "scipy>=1.15,<2",
     "sentencepiece>=0.2,<0.3",
-    "torch==2.9.1",
-    "torchvision==0.24.1",
+    "torch==2.8.0",
+    "torchvision==0.23.0",
     "tqdm>=4.67,<5",
     "transformers>=5,<6",
 ]
@@ -50,8 +49,8 @@ viz = ["matplotlib>=3.10,<4"]
 [tool.setuptools.packages.find]
 include = ["scope*", "diffsynth*"]
 
-# uv resolves torch / torchvision from the PyTorch cu128 wheel index, matching
-# the ucpe_v11 training/eval environment (CUDA 12.8). With plain pip, pass
+# uv resolves torch / torchvision from the PyTorch CUDA 12.8 wheel index.
+# With plain pip, pass
 # --extra-index-url https://download.pytorch.org/whl/cu128 instead.
 [tool.uv.sources]
 torch = { index = "pytorch-cu128" }
@@ -64,7 +63,7 @@ explicit = true
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

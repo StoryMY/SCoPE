@@ -90,23 +90,24 @@ In practice this means:
 
 ## Installation
 
-SCoPE requires Python 3.11 and a CUDA-capable GPU. The released weights were trained and
-evaluated with **PyTorch 2.9.1 (CUDA 12.8)**; because changing the PyTorch version can change the
-numerical output, we recommend reproducing this exact environment.
+This fork targets **Python 3.12, PyTorch 2.8.0, torchvision 0.23.0, and CUDA 12.8**
+on a CUDA-capable GPU. Upstream trained and evaluated the released weights with
+PyTorch 2.9.1; numerical outputs may differ with this environment. Full GPU inference
+with this fork's environment still needs validation.
 
 Recommended — [uv](https://docs.astral.sh/uv/) (resolves the pinned CUDA 12.8 torch build):
 
 ```bash
 git clone https://github.com/TencentARC/SCoPE.git
 cd SCoPE
-uv sync
+uv sync --python 3.12
 source .venv/bin/activate
 ```
 
 Alternative — pip with the PyTorch CUDA 12.8 wheel index:
 
 ```bash
-conda create -n scope python=3.11 -y
+conda create -n scope python=3.12 -y
 conda activate scope
 pip install -e . --extra-index-url https://download.pytorch.org/whl/cu128
 ```
