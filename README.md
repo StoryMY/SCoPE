@@ -375,3 +375,58 @@ contributors of these projects.
 ## License
 
 SCoPE is released under the [Apache-2.0 License](LICENSE.txt).
+
+
+## COLMAP 场景推理
+
+安装可选的 COLMAP 读取依赖：
+
+```bash
+pip install -e ".[colmap]" --extra-index-url https://download.pytorch.org/whl/cu128
+```
+
+运行推理：
+
+```bash
+python inference_colmap.py --scene /data/scene --prompt "A quiet street." \
+  --model_path checkpoints/SCoPE --output_path outputs/street.mp4
+```
+
+场景目录包含 `images/` 和 `sparse/0/`，支持 COLMAP 二进制或文本模型。有多个重建模型时，通过 `--colmap-model PATH` 指定；图像目录不同则使用 `--images-dir PATH`。所有相对路径均相对于当前工作目录。
+
+### 参考图像与目标轨迹
+
+注册图像按文件名字典序排列，以下编号均从 0 开始，**不是 COLMAP image ID**：
+
+- 不指定 `--reference-index`：从 `--start` 到 `--end`（包含两端）均匀选取 81 个相机，使用第一张选中图像作为参考。区间需至少包含 81 张注册图像。
+- 指定 `--reference-index N`：使用第 N 张注册图像作为参考和输出首帧，再从 `--start` 到 `--end` 均匀选取 80 个目标相机，共 81 帧。目标区间需至少包含 80 张注册图像。
+- 参考图像可以位于目标区间之外；若位于区间内，也可能在采样轨迹中再次出现。参考相机与第一个目标相机相距较远时，视角可能发生突变。
+- `--start` 默认为 0，`--end` 默认为最后一张注册图像。只有参考图像提供视觉条件，其余相机仅提供生成轨迹。
+
+例如，以第 10 张图像为参考，沿第 20～120 张图像对应的相机轨迹生成：
+
+```bash
+python inference_colmap.py --scene /data/scene \
+  --reference-index 10 --start 20 --end 120 \
+  --prompt "A quiet street." --model_path checkpoints/SCoPE \
+  --output_path outputs/street.mp4
+```
+
+### 位姿归一化与内参
+
+适配器将 COLMAP 的 world-to-camera 位姿取逆，得到 camera-to-world 位姿，再自动执行 `inverse(reference_c2w) @ c2w`，将所有相机转换到参考相机坐标系。
+
+默认保留平移尺度。添加 `--unit-baseline` 后，将选中相机到参考相机的最大距离缩放为 1；纯旋转情况下保留原尺度。这种基线缩放不同于 SCoPE 训练时的 near-depth 归一化，运动幅度过大时需要调整场景尺度。
+
+畸变相机使用 pycolmap 去畸变；等距柱状全景输入需先转换为透视视图。逐帧完整内参（包括主点和独立的 fx/fy）缩放到 832×480 后传入射线编码器，参考图像使用对应标定进行去畸变和缩放。
+
+### 仅预处理与导出
+
+添加 `--prepare-only` 可检查并导出输入，不加载 GPU 模型权重。默认输出目录 `outputs/colmap_input/` 包含：
+
+- `first_frame.png`：处理后的参考图像。
+- `camera_poses.npy`：归一化后的相机位姿。
+- `intrinsics.npy`：逐帧内参。
+- `scene.json`：选中帧及归一化变换记录。
+
+可通过 `--prepared-dir` 为不同场景或运行指定独立目录，保留各次预处理结果。

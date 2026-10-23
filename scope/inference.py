@@ -63,6 +63,10 @@ def generate(
         "x_fov": torch.tensor([example["x_fov"]], device=device, dtype=pipe.torch_dtype),
         "xi": torch.tensor([example.get("xi", 0.0)], device=device, dtype=pipe.torch_dtype),
     }
+    if "intrinsics" in example:
+        camera["intrinsics"] = torch.from_numpy(example["intrinsics"])[None].to(
+            device=device, dtype=pipe.torch_dtype
+        )
     with torch.autocast(
         device_type=device.type, dtype=torch.bfloat16, enabled=device.type == "cuda"
     ):

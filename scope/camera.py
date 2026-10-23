@@ -52,6 +52,13 @@ class SCoPECameraUnit(PipelineUnit):
         intrinsics[..., 1, 2] = height * 0.5
         intrinsics[..., 2, 2] = 1.0
 
+        if "intrinsics" in camera_control_panshot:
+            intrinsics = camera_control_panshot["intrinsics"][:, ::4].to(
+                device=pose.device, dtype=pose.dtype
+            )
+            if intrinsics.shape != (*pose.shape[:2], 3, 3):
+                raise ValueError("Camera intrinsics must match the pose sequence")
+
         coordinates = compute_plucker_coordinates(
             c2w,
             intrinsics,

@@ -42,6 +42,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+colmap = ["pycolmap>=4,<5"]
 dev = ["pytest>=8,<10", "ruff>=0.12,<1"]
 # Camera-frustum / WASD overlay tool (scripts/overlay_camera.py).
 viz = ["matplotlib>=3.10,<4"]
