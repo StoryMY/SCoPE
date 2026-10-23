@@ -5,6 +5,8 @@ from pathlib import Path
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--width", type=int, help="Output width; specify together with --height")
+    parser.add_argument("--height", type=int, help="Output height; defaults to reference orientation")
     parser.add_argument("--scene", type=Path, required=True)
     parser.add_argument("--colmap-model", type=Path)
     parser.add_argument("--images-dir", type=Path)
@@ -34,6 +36,7 @@ def main():
     try:
         pose, intrinsics = adapter.prepare_scene(
             args.scene, args.prepared_dir, model=args.colmap_model,
+            width=args.width, height=args.height,
             images=args.images_dir, start=args.start, end=args.end,
             unit_baseline=args.unit_baseline, reference_index=args.reference_index)
     except (ValueError, OSError, RuntimeError, ImportError) as error:
@@ -45,7 +48,10 @@ def main():
     from scope.inference import _prepare_device, generate
     from scope.weights import load_pipeline, resolve_model_dir
     import numpy as np
-    config = InferenceConfig(seed=args.seed)
+    from PIL import Image
+    with Image.open(args.prepared_dir / "first_frame.png") as prepared:
+        width, height = prepared.size
+    config = InferenceConfig(seed=args.seed, width=width, height=height)
     example = {
         "first_frame": args.prepared_dir / "first_frame.png",
         "caption": args.prompt,

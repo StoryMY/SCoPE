@@ -48,6 +48,17 @@ class ColmapTests(unittest.TestCase):
                 np.testing.assert_allclose(chosen[1, :, 3], [4, 0, 0])
                 with self.assertRaises(ValueError):
                     scene.prepare_scene(root, root / "invalid", num_frames=2, reference_index=2)
+                portrait, portrait_k = scene.prepare_scene(
+                    root, root / "portrait", num_frames=2, width=480, height=832)
+                with Image.open(root / "portrait/first_frame.png") as exported:
+                    self.assertEqual(exported.size, (480, 832))
+                np.testing.assert_allclose(portrait, poses)
+                if model == "PINHOLE":
+                    # 32x24 -> 1110x832 -> center crop to 480x832.
+                    np.testing.assert_allclose(portrait_k[0, 0, 0], 25 * 1110 / 32)
+                    np.testing.assert_allclose(portrait_k[0, 0, 2], 240)
+                with self.assertRaises(ValueError):
+                    scene.prepare_scene(root, root / "badsize", num_frames=2, width=480)
                 binary = root / "binary"
                 binary.mkdir()
                 pycolmap.Reconstruction(str(sparse)).write_binary(str(binary))

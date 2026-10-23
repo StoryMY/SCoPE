@@ -150,7 +150,7 @@ def normalize_poses(poses, unit_baseline=False):
     return relative.astype(np.float32), {"reference_c2w": reference.tolist(), "translation_scale": scale}
 
 
-def prepare_scene(scene, output, num_frames=81, width=832, height=480,
+def prepare_scene(scene, output, num_frames=81, width=None, height=None,
                   model=None, images=None, start=0, end=None, unit_baseline=False, reference_index=None):
     source = read_colmap(Path(scene), Path(images) if images else Path(scene) / "images",
                          Path(model) if model else None)
@@ -166,6 +166,13 @@ def prepare_scene(scene, output, num_frames=81, width=832, height=480,
     if reference_index is not None:
         indices = np.concatenate(([reference_index], indices))
     frames = [source.frames[i] for i in indices]
+    if (width is None) != (height is None):
+        raise ValueError("Specify both width and height")
+    if width is None:
+        ref_w, ref_h = frames[0].camera.output_size
+        width, height = (480, 832) if ref_h > ref_w else (832, 480)
+    if width <= 0 or height <= 0 or width % 16 or height % 16:
+        raise ValueError("Width and height must be positive multiples of 16")
     poses, normalization = normalize_poses(
         [np.linalg.inv(frame.extrinsics) for frame in frames], unit_baseline)
     intrinsics = []
@@ -178,12 +185,21 @@ def prepare_scene(scene, output, num_frames=81, width=832, height=480,
             with Image.open(frame.path) as image:
                 first_image, k = camera.prepare(image.convert("RGB"))
             w, h = first_image.size
-        k[0] *= width / w
-        k[1] *= height / h
+        # Cover resize and center crop: preserve aspect ratio and update calibration.
+        scale = max(width / w, height / h)
+        resized_w, resized_h = int(np.ceil(w * scale)), int(np.ceil(h * scale))
+        left, top = (resized_w - width) // 2, (resized_h - height) // 2
+        k[0] *= resized_w / w
+        k[1] *= resized_h / h
+        k[0, 2] -= left
+        k[1, 2] -= top
+        if i == 0:
+            first_image = first_image.resize((resized_w, resized_h), Image.Resampling.LANCZOS)
+            first_image = first_image.crop((left, top, left + width, top + height))
         intrinsics.append(k)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
-    first_image.resize((width, height), Image.Resampling.LANCZOS).save(output / "first_frame.png")
+    first_image.save(output / "first_frame.png")
     np.save(output / "camera_poses.npy", poses[:, :3])
     np.save(output / "intrinsics.npy", np.asarray(intrinsics, dtype=np.float32))
     (output / "scene.json").write_text(json.dumps({
